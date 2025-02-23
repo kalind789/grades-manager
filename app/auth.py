@@ -14,9 +14,9 @@ def register():
         password2 = request.form['password2']
         error = None
         
-        if username is None:
+        if not username:
             error = 'Must enter username!'
-        elif password1 is None or password2 is None:
+        elif not password1 or not password2:
             error = 'Must enter both passwords!'
         elif password1 != password2:
             error = 'Both passswords must be the same'
@@ -25,7 +25,7 @@ def register():
             try:
                 db.execute(
                     """
-                        INTSERT INTO user (username, password)
+                        INSERT INTO user (username, password)
                         VALUES (?, ?)
                     """,
                     (username, generate_password_hash(password1)),
@@ -38,7 +38,7 @@ def register():
         
         flash(error)
 
-        return render_template('auth/register.html')
+    return render_template('auth/register.html')
 
 @bp.route('/login', methods=('GET', 'POST'))
 def login():
