@@ -1,12 +1,14 @@
 import os
 from flask import Flask
+from datetime import timedelta
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
 
     app.config.from_mapping(
         SECRET_KEY = 'dev',
-        DATABASE = os.path.join(app.instance_path, 'app.sqlite')
+        DATABASE = os.path.join(app.instance_path, 'app.sqlite'),
+        PERMANENT_SESSION_LIFETIME = timedelta(minutes=10)
     )
 
     if test_config == None:

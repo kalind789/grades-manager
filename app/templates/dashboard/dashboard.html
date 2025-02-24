@@ -6,6 +6,9 @@
 
 {% block content %}
 <div class="container">
+    <div>
+        <a href="{{ url_for('dashboard.create_class') }}" class="btn btn-primary mb-3">Add Classes</a>
+    </div>
     <div class="row">
         {% for class in classes %}
             <div class="col-md-4">
@@ -13,6 +16,7 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ class['class_name'] }}</h5>
                         <h6 class="card-subtitle mb-2 text-muted">{{ class['class_code'] if class['class_code'] else 'No Code' }}</h6>
+                        <a href="{{ url_for('dashboard.edit_class', id=class['id']) }}" class="btn btn-secondary mt-2">Edit</a>
                     </div>
                 </div>
             </div>

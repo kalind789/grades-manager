@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Edit Class{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post" action="{{ url_for('dashboard.edit_class', id=current_class['id']) }}">
+    <label for="class_name">Class Name</label>
+    <input name="class_name" id="class_name" value="{{ current_class['class_name'] }}" required>
+    <label for="class_code">Class Code</label>
+    <input name="class_code" id="class_code" value="{{ current_class['class_code'] if current_class['class_code'] else '' }}" required>
+    <input type="submit" value="Save">
+  </form>
+{% endblock %}

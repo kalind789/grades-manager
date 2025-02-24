@@ -59,6 +59,7 @@ def login():
         
         if error is None:
             session.clear()
+            session.permanent = True
             session['user_id'] = user['id']
             return redirect(url_for('dashboard.dashboard'))
         

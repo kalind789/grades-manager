@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}New Post{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post" action="{{ url_for('dashboard.create_class') }}">
+    <label for="class_name">Class Name</label>
+    <input name="class_name" id="class_name" value="{{ request.form['class_name'] }}" required>
+    <label for="class_code">Class Code</label>
+    <input name="class_code" id="class_code" value="{{ request.form['class_code'] }}" required>
+    <input type="submit" value="Save">
+  </form>
+{% endblock %}
