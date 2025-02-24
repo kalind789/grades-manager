@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1 class="text-center my-4">{% block title %}Welcome to your Dashboard {{g.user['username']}}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        {% for class in classes %}
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3 mb-4 bg-white rounded">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ class['class_name'] }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ class['class_code'] if class['class_code'] else 'No Code' }}</h6>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -46,6 +46,20 @@ def init_db_command():
     init_db()
     click.echo("Intialized the database")
 
+@click.command('add-class')
+def add_class_command():
+    db = get_db()
+    db.execute(
+        """
+            INSERT INTO class (class_name, class_code, student_id) 
+            VALUES (?, ?, ?)
+        """,
+        ('Intro to Computer Science', 'CSC 171', 1)
+    )
+    db.commit()
+    click.echo('Added class!')
+
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
+    app.cli.add_command(add_class_command)

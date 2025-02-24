@@ -60,7 +60,41 @@ def login():
         if error is None:
             session.clear()
             session['user_id'] = user['id']
-            return redirect(url_for('app.dashboard'))
+            return redirect(url_for('dashboard.dashboard'))
         
         flash(error)
     return render_template('auth/login.html')
+
+@bp.before_app_request
+def load_logged_in_user():
+    """
+        Registers a view to run before the view function, no matter what url is requested.
+        Checks if the user_id is stored in the session, and then get's all of that user's data.
+    """
+    user_id = session.get('user_id')
+
+    if user_id is None:
+        g.user = None
+    else:
+        g.user = get_db().execute(
+            'SELECT * FROM user WHERE id = ?', (user_id,)
+        ).fetchone()
+        
+@bp.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
+
+# Require authenticaiton in other views
+def login_required(view):
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        """
+            Checks if a user is laoded, if not, it takes you back to the login page. 
+        """
+        if g.user is None:
+            return redirect(url_for('auth.login'))
+        
+        return view(**kwargs)
+    
+    return wrapped_view

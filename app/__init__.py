@@ -33,5 +33,8 @@ def create_app(test_config=None):
     @app.route('/')
     def index():
         return render_template('index.html')
+    
+    from . import dashboard
+    app.register_blueprint(dashboard.bp)
 
     return app
