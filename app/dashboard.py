@@ -90,3 +90,16 @@ def edit_class(id):
             db.commit()
             return redirect(url_for('dashboard.dashboard'))
     return render_template('dashboard/edit_class.html', current_class=current_class)
+
+@bp.route('/<int:id>/delete_class', methods=("GET", "POST"))
+def delete_class(id):
+    current_class = get_class(id)
+    db = get_db()
+    db.execute(
+        """
+            DELETE FROM class WHERE id = ?
+        """,
+        (id, )
+    )
+    db.commit()
+    return redirect(url_for('dashboard.dashboard'))
