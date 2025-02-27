@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block header %}
-    <h1 class="text-center my-4">{% block title %}Welcome to your Dashboard {{g.user['first_name'] + " " + g.user['last_name']}}{% endblock %}</h1>
+    <h1 class="text-center my-4">{% block title %}Welcome to your Dashboard {{ g.user['first_name'] + " " + g.user['last_name'] }}{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
@@ -16,8 +16,12 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ class['class_name'] }}</h5>
                         <h6 class="card-subtitle mb-2 text-muted">{{ class['class_code'] if class['class_code'] else 'No Code' }}</h6>
+
                         <a href="{{ url_for('dashboard.edit_class', id=class['id']) }}" class="btn btn-secondary mt-2">Edit</a>
-                        <a href="{{ url_for('dashboard.delete_class', id=class['id']) }}" class="btn btn-secondary mt-2">Delete</a>
+                        <a href="{{ url_for('dashboard.delete_class', id=class['id']) }}" class="btn btn-danger mt-2">Delete</a>
+
+                        <!-- 🔥 New "Manage Class" Button -->
+                        <a href="{{ url_for('section.get_sections', class_id=class['id']) }}" class="btn btn-info mt-2">Manage Class</a>
                     </div>
                 </div>
             </div>

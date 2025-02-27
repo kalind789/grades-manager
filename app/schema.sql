@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS user (
     password TEXT NOT NULL,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
-    email TEXT
+    email TEXT UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS class (
@@ -31,8 +31,6 @@ CREATE TABLE IF NOT EXISTS assignment (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     assignment_name TEXT NOT NULL,
     assignment_grade REAL,
-    class_id INTEGER NOT NULL,
     section_id INTEGER NOT NULL, 
-    FOREIGN KEY (class_id) REFERENCES class (id) ON DELETE CASCADE,
     FOREIGN KEY (section_id) REFERENCES section (id) ON DELETE CASCADE
 )
