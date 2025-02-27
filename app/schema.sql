@@ -6,7 +6,10 @@ DROP TABLE IF EXISTS user;
 CREATE TABLE IF NOT EXISTS user (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
+    password TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    email TEXT
 );
 
 CREATE TABLE IF NOT EXISTS class (

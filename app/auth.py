@@ -12,12 +12,20 @@ def register():
         username = request.form['username']
         password1 = request.form['password1']
         password2 = request.form['password2']
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
+        email = request.form['email']
+
         error = None
         
         if not username:
             error = 'Must enter username!'
         elif not password1 or not password2:
             error = 'Must enter both passwords!'
+        elif not first_name:
+            error = 'Must enter first name'
+        elif not last_name:
+            error = 'Must enter last name'
         elif password1 != password2:
             error = 'Both passswords must be the same'
 
@@ -25,10 +33,10 @@ def register():
             try:
                 db.execute(
                     """
-                        INSERT INTO user (username, password)
-                        VALUES (?, ?)
+                        INSERT INTO user (username, password, first_name, last_name, email)
+                        VALUES (?, ?, ?, ?, ?)
                     """,
-                    (username, generate_password_hash(password1)),
+                    (username, generate_password_hash(password1), first_name, last_name, email),
                 )
                 db.commit()
             except db.IntegrityError:

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block header %}
-    <h1 class="text-center my-4">{% block title %}Welcome to your Dashboard {{g.user['username']}}{% endblock %}</h1>
+    <h1 class="text-center my-4">{% block title %}Welcome to your Dashboard {{g.user['first_name'] + " " + g.user['last_name']}}{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
