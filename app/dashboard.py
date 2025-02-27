@@ -7,6 +7,29 @@ from app.db import get_db
 
 bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
+@bp.route('/manage_class/<int:class_id>', methods=["GET"])
+@login_required
+def manage_class(class_id):
+    """Renders the manage_class page for a specific class."""
+    db = get_db()
+    
+    # Get the class details
+    class_info = db.execute(
+        "SELECT * FROM class WHERE id = ? AND student_id = ?",
+        (class_id, g.user["id"]),
+    ).fetchone()
+
+    if not class_info:
+        return "Class not found or unauthorized", 404  # Prevents accessing another user's class
+
+    # Get all sections of the class
+    sections = db.execute(
+        "SELECT * FROM section WHERE class_id = ?",
+        (class_id,),
+    ).fetchall()
+
+    return render_template("manage_class/manage_class.html", class_info=class_info, sections=sections)
+
 @bp.route('/', methods=("GET", "POST"))
 @login_required
 def dashboard():

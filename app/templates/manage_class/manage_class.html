@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1 class="text-center my-4">Managing Class: {{ class_info['class_name'] }}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h3>Sections</h3>
+    <a href="{{ url_for('section.create_section', class_id=class_info['id']) }}" class="btn btn-primary mb-3">Add Section</a>
+
+    <div class="row">
+        {% for section in sections %}
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3 mb-4 bg-white rounded">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ section['section_name'] }}</h5>
+                        <a href="{{ url_for('section.edit_section', id=section['id']) }}" class="btn btn-secondary mt-2">Edit</a>
+                        <form action="{{ url_for('section.delete_section', id=section['id']) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-danger mt-2" onclick="return confirm('Are you sure?')">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

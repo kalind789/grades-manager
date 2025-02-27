@@ -21,7 +21,7 @@
                         <a href="{{ url_for('dashboard.delete_class', id=class['id']) }}" class="btn btn-danger mt-2">Delete</a>
 
                         <!-- 🔥 New "Manage Class" Button -->
-                        <a href="{{ url_for('section.get_sections', class_id=class['id']) }}" class="btn btn-info mt-2">Manage Class</a>
+                        <a href="{{ url_for('dashboard.manage_class', class_id=class['id']) }}" class="btn btn-info mt-2">Manage Class</a>
                     </div>
                 </div>
             </div>
