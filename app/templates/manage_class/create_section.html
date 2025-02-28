@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-  <form method="post" action="{{ url_for('section.create_sections') }}">
+  <form method="post" action="{{ url_for('section.create_sections', class_id=class_id) }}">
     <label for="section_name">Section Name</label>
     <input name="section_name" id="section_name" value="{{ request.form['section_name'] }}" required>
     <label for="section_weight">Section Weight</label>

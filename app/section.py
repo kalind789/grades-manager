@@ -13,10 +13,10 @@ def get_sections(class_id):
         WHERE s.class_id = ?
         """,
         (class_id,),
-    ).fetchall()  # ✅ Added fetchall()
+    ).fetchall()
 
     sections_list = [dict(section) for section in sections]
-    return sections_list  # ✅ This now returns a proper list
+    return sections_list
 
 @bp.route('/create_section/<int:class_id>', methods=["GET", "POST"])
 def create_sections(class_id):
@@ -33,7 +33,7 @@ def create_sections(class_id):
 
         if error:
             flash(error)
-            return render_template('manage_class/create_section.html')  # ✅ Fixed extra slash
+            return render_template('manage_class/create_section.html')
 
         db.execute(
             """
@@ -44,6 +44,6 @@ def create_sections(class_id):
         )
         db.commit()  # ✅ Commit the database changes
 
-        return redirect(url_for('manage_classes.manage_class', class_id=class_id))  # ✅ Fixed redirect
+        return redirect(url_for('manage_classes.manage_class', class_id=class_id))
 
-    return render_template('manage_class/create_section.html')  # ✅ Fixed extra slash
+    return render_template('manage_class/create_section.html', class_id=class_id)
