@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1 class="text-center my-4">{% block title %} Managing Class {{ class_name }}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div>
+        <a class="btn btn-primary mb-3">Add Section</a>
+    </div>
+    <div class="row">
+        {% for section in sections %}
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3 mb-4 bg-white rounded">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ section['section_name'] }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ section['section_weight']}}</h6>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

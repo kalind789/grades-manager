@@ -20,8 +20,7 @@
                         <a href="{{ url_for('dashboard.edit_class', id=class['id']) }}" class="btn btn-secondary mt-2">Edit</a>
                         <a href="{{ url_for('dashboard.delete_class', id=class['id']) }}" class="btn btn-danger mt-2">Delete</a>
 
-                        <!-- 🔥 New "Manage Class" Button -->
-                        <a href="{{ url_for('dashboard.manage_class', class_id=class['id']) }}" class="btn btn-info mt-2">Manage Class</a>
+                        <a href="{{ url_for('manage_classes.manage_classes', class_id=class['id']) }}" class="btn btn-info mt-2">Manage Class</a>
                     </div>
                 </div>
             </div>

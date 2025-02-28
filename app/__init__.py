@@ -39,6 +39,9 @@ def create_app(test_config=None):
     from . import dashboard
     app.register_blueprint(dashboard.bp)
 
+    from . import manage_classes
+    app.register_blueprint(manage_classes.bp)
+
     from . import section
     app.register_blueprint(section.bp)
 
