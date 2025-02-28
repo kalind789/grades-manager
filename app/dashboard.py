@@ -5,101 +5,127 @@ from werkzeug.exceptions import abort
 from app.auth import login_required
 from app.db import get_db
 
-bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
+bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
-@bp.route('/', methods=("GET", "POST"))
+@bp.route("/", methods=("GET", "POST"))
 @login_required
 def dashboard():
     db = get_db()
-    classes = db.execute(
-        """
+    with db.cursor() as cursor:
+        cursor.execute(
+            """
             SELECT c.id, c.class_name, c.class_code, c.student_id 
             FROM class c
-            WHERE c.student_id = ?
+            WHERE c.student_id = %s
             ORDER BY c.id DESC
-        """,
-        (g.user['id'],),
-    ).fetchall()
-    return render_template('dashboard/dashboard.html', classes = classes)
+            """,
+            (g.student["id"],),
+        )
+        columns = [desc[0] for desc in cursor.description]
+        classes = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-@bp.route('/create_class', methods=("GET", "POST"))
+    return render_template("dashboard/dashboard.html", classes=classes)
+
+@bp.route("/create_class", methods=("GET", "POST"))
+@login_required
 def create_class():
-    if request.method == 'POST':
-        class_name = request.form['class_name']
-        class_code = request.form['class_code']
-        error = None
+    if request.method == "POST":
+        class_name = request.form["class_name"]
+        class_code = request.form["class_code"]
+        error = "Class name is required" if not class_name else None
 
-        if not class_name:
-            error = 'class name required'
-        if error is not None:
+        if error:
             flash(error)
         else:
             db = get_db()
-            db.execute(
-                """
-                    INSERT INTO class (class_name, class_code, student_id)
-                    VALUES (?, ?, ?)
-                """,
-                (class_name, class_code, g.user['id'])
-            )
-            db.commit()
-            return redirect(url_for('dashboard.dashboard'))
-        
-    return render_template('dashboard/create_class.html')
+            with db.cursor() as cursor:
+                try:
+                    cursor.execute(
+                        """
+                        INSERT INTO class (class_name, class_code, student_id)
+                        VALUES (%s, %s, %s)
+                        """,
+                        (class_name, class_code, g.student["id"]),
+                    )
+                    db.commit()
+                except Exception as e:
+                    db.rollback()
+                    flash(f"❌ Error creating class: {e}")
 
-def get_class(id):
+            return redirect(url_for("dashboard.dashboard"))
+
+    return render_template("dashboard/create_class.html")
+
+def get_class(class_id):
     db = get_db()
-    class_entry = db.execute(
-        """
-        SELECT c.id, c.class_name, c.class_code, c.student_id, u.username
-        FROM class c
-        JOIN user u ON u.id = c.student_id
-        WHERE c.id = ?
-        """,
-        (id,)
-    ).fetchone()
+    with db.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT c.id, c.class_name, c.class_code, c.student_id, s.studentname
+            FROM class c
+            JOIN student s ON s.id = c.student_id
+            WHERE c.id = %s
+            """,
+            (class_id,),
+        )
+        row = cursor.fetchone()
 
-    if class_entry is None:
-        abort(404, f"Class id {id} doesn't exist.")
+    if row is None:
+        abort(404, f"Class id {class_id} doesn't exist.")
 
-    return class_entry
+    column_names = ["id", "class_name", "class_code", "student_id", "studentname"]
+    return dict(zip(column_names, row))
 
-@bp.route('/<int:id>/edit_class', methods=("GET", "POST"))
+@bp.route("/<int:id>/edit_class", methods=("GET", "POST"))
+@login_required
 def edit_class(id):
     current_class = get_class(id)
 
-    if request.method == 'POST':
-        class_name = request.form['class_name']
-        class_code = request.form['class_code']
-        error = None
+    if request.method == "POST":
+        class_name = request.form["class_name"]
+        class_code = request.form["class_code"]
+        error = "Class name is required" if not class_name else None
 
-        if not class_name:
-            error = 'class_name is required'
-    
-        if error is not None:
+        if error:
             flash(error)
         else:
             db = get_db()
-            db.execute(
-                """
-                    UPDATE class SET class_name = ?, class_code = ?
-                    WHERE id = ?
-                """,
-                (class_name, class_code, id)
-            )
-            db.commit()
-            return redirect(url_for('dashboard.dashboard'))
-    return render_template('dashboard/edit_class.html', current_class=current_class)
+            with db.cursor() as cursor:
+                try:
+                    cursor.execute(
+                        """
+                        UPDATE class SET class_name = %s, class_code = %s
+                        WHERE id = %s
+                        """,
+                        (class_name, class_code, id),
+                    )
+                    db.commit()
+                except Exception as e:
+                    db.rollback()
+                    flash(f"❌ Error updating class: {e}")
 
-@bp.route('/<int:id>/delete_class', methods=("GET", "POST"))
+            return redirect(url_for("dashboard.dashboard"))
+
+    return render_template("dashboard/edit_class.html", current_class=current_class)
+
+@bp.route("/<int:id>/delete_class", methods=("POST",))
+@login_required
 def delete_class(id):
     current_class = get_class(id)
+
+    if g.student["id"] != current_class["student_id"]:
+        flash("❌ You are not authorized to delete this class.")
+        return redirect(url_for("dashboard.dashboard"))
+
     db = get_db()
-    db.execute(
-        """
-            DELETE FROM class WHERE id = ?
-        """,
-        (id, )
-    )
-    db.commit()
-    return redirect(url_for('dashboard.dashboard'))
+    with db.cursor() as cursor:
+        try:
+            cursor.execute(
+                "DELETE FROM class WHERE id = %s", (id,)
+            )
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            flash(f"❌ Error deleting class: {e}")
+
+    return redirect(url_for("dashboard.dashboard"))

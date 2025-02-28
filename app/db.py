@@ -2,6 +2,9 @@ import sqlite3
 from datetime import datetime
 import click
 from flask import current_app, g
+import psycopg2
+import os
+from psycopg2 import sql
 
 def get_db():
     """
@@ -11,11 +14,8 @@ def get_db():
         current_app: flask app that the request is running on
     """
     if 'db' not in g:
-        g.db = sqlite3.connect(
-            current_app.config['DATABASE'],
-            detect_types=sqlite3.PARSE_DECLTYPES
-        )
-        g.db.row_factory = sqlite3.Row
+        DATABASE_URL = os.getenv('DATABASE_URL')
+        g.db = psycopg2.connect(DATABASE_URL, sslmode="require")
 
     return g.db
 
@@ -34,9 +34,22 @@ def init_db():
         Intializes the database with the scripts present in schema.sql
     """
     db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("SELECT EXISTS (SELECT FROM pg_tables WHERE tablename = 'student');")
+    exists = cursor.fetchone()[0]
+    if exists:
+        return
 
     with current_app.open_resource('schema.sql') as f:
-        db.executescript(f.read().decode('utf8'))
+        sql_script = f.read().decode('utf-8')
+    
+    statements = sql_script.split(';')
+    for statement in statements:
+        if statement.strip():
+            cursor.execute(statement)
+    
+    db.commit()
 
 @click.command('init-db')
 def init_db_command():
@@ -46,20 +59,7 @@ def init_db_command():
     init_db()
     click.echo("Intialized the database")
 
-@click.command('add-class')
-def add_class_command():
-    db = get_db()
-    db.execute(
-        """
-            INSERT INTO class (class_name, class_code, student_id) 
-            VALUES (?, ?, ?)
-        """,
-        ('Intro to Computer Science', 'CSC 171', 1)
-    )
-    db.commit()
-    click.echo('Added class!')
 
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
-    app.cli.add_command(add_class_command)

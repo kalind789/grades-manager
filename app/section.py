@@ -6,17 +6,22 @@ bp = Blueprint('section', __name__, url_prefix='/section')
 
 @bp.route('/get_sections/<int:class_id>', methods=["GET", "POST"])
 def get_sections(class_id):
-    sections = get_db().execute(
-        """ 
-        SELECT s.id, s.section_name, s.section_weight
-        FROM section s
-        WHERE s.class_id = ?
-        """,
-        (class_id,),
-    ).fetchall()
+    db = get_db()
+    
+    with db.cursor() as cursor:
+        cursor.execute(
+            """ 
+            SELECT s.id, s.section_name, s.section_weight
+            FROM section s
+            WHERE s.class_id = %s
+            """,
+            (class_id,),
+        )
+        columns = [desc[0] for desc in cursor.description]  # ✅ Auto-fetch column names
+        sections = [dict(zip(columns, row)) for row in cursor.fetchall()]  # ✅ Convert tuples into dicts
 
-    sections_list = [dict(section) for section in sections]
-    return sections_list
+    return sections
+
 
 @bp.route('/create_section/<int:class_id>', methods=["GET", "POST"])
 def create_sections(class_id):
@@ -35,14 +40,15 @@ def create_sections(class_id):
             flash(error)
             return render_template('manage_class/create_section.html')
 
-        db.execute(
-            """
-            INSERT INTO section (section_name, section_weight, class_id)
-            VALUES (?, ?, ?)
-            """,
-            (section_name, section_weight, class_id),
-        )
-        db.commit()  # ✅ Commit the database changes
+        with db.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO section (section_name, section_weight, class_id)
+                VALUES (%s, %s, %s)
+                """,
+                (section_name, section_weight, class_id),
+            )
+            db.commit()  # ✅ Commit the database changes
 
         return redirect(url_for('manage_classes.manage_class', class_id=class_id))
 
