@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
 {% block header %}
-    <h1 class="text-center my-4">{% block title %} Managing Class {{ class_name }}{% endblock %}</h1>
+    <h1 class="text-center my-4">{% block title %} Managing Class {{ class_['class_name'] }}{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
 <div class="container">
     <div>
-        <a class="btn btn-primary mb-3">Add Section</a>
+        <a href="{{ url_for('section.create_sections', class_id=class_.id) }}" class="btn btn-primary mb-3">Add Section</a>
     </div>
     <div class="row">
         {% for section in sections %}

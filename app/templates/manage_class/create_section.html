@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}New Section{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post" action="{{ url_for('section.create_sections') }}">
+    <label for="section_name">Section Name</label>
+    <input name="section_name" id="section_name" value="{{ request.form['section_name'] }}" required>
+    <label for="section_weight">Section Weight</label>
+    <input name="section_weight" id="section_weight" value="{{ request.form['section_weight'] }}" required>
+    <input type="submit" value="Save">
+  </form>
+{% endblock %}
