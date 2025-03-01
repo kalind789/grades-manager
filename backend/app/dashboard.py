@@ -1,14 +1,15 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, current_app
+    Blueprint, flash, g, redirect, render_template, request, url_for, current_app, jsonify
 )
 from werkzeug.exceptions import abort
 from app.auth import login_required
 from app.db import get_db
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
 @bp.route("/", methods=("GET", "POST"))
-@login_required
+@jwt_required()
 def dashboard():
     db = get_db()
     with db.cursor() as cursor:
@@ -24,10 +25,10 @@ def dashboard():
         columns = [desc[0] for desc in cursor.description]
         classes = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-    return render_template("dashboard/dashboard.html", classes=classes)
+    return jsonify({"classes": classes})
 
 @bp.route("/create_class", methods=("GET", "POST"))
-@login_required
+@jwt_required()
 def create_class():
     if request.method == "POST":
         class_name = request.form.get("class_name")
@@ -78,7 +79,7 @@ def get_class(class_id):
     return dict(zip(column_names, row))
 
 @bp.route("/<int:id>/edit_class", methods=("GET", "POST"))
-@login_required
+@jwt_required()
 def edit_class(id):
     current_class = get_class(id)
 
@@ -115,7 +116,7 @@ def edit_class(id):
     return render_template("dashboard/edit_class.html", current_class=current_class)
 
 @bp.route("/<int:id>/delete_class", methods=("POST",))
-@login_required
+@jwt_required()
 def delete_class(id):
     current_class = get_class(id)
 

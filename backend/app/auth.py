@@ -3,7 +3,7 @@ from flask import (Blueprint, flash, g, redirect, render_template, request, sess
 from werkzeug.security import check_password_hash, generate_password_hash
 from app.db import get_db
 import psycopg2
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+from flask_jwt_extended import create_access_token
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
