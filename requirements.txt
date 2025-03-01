@@ -2,3 +2,6 @@ Flask
 gunicorn
 psycopg2
 python-dotenv
+pytest 
+pytest-flask 
+psycopg2-binary

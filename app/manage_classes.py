@@ -9,7 +9,8 @@ bp = Blueprint('manage_classes', __name__, url_prefix='/manage_classes')
 @login_required
 def manage_class(class_id):
     db = get_db()
-    sections = get_sections(class_id)  # ✅ Correct way to fetch sections
+    response = get_sections(class_id)  # ✅ Correct way to fetch sections
+    sections = response.json.get("sections", [])
 
     with db.cursor() as cursor:
         cursor.execute(

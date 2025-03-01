@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for
+    Blueprint, flash, g, redirect, render_template, request, url_for, current_app
 )
 from werkzeug.exceptions import abort
 from app.auth import login_required
@@ -30,8 +30,8 @@ def dashboard():
 @login_required
 def create_class():
     if request.method == "POST":
-        class_name = request.form["class_name"]
-        class_code = request.form["class_code"]
+        class_name = request.form.get("class_name")
+        class_code = request.form.get("class_code")
         error = "Class name is required" if not class_name else None
 
         if error:
@@ -50,7 +50,8 @@ def create_class():
                     db.commit()
                 except Exception as e:
                     db.rollback()
-                    flash(f"❌ Error creating class: {e}")
+                    current_app.logger.error(f"Error creating class: {e}")
+                    flash("Error creating class. Please try again.")
 
             return redirect(url_for("dashboard.dashboard"))
 
@@ -81,9 +82,13 @@ def get_class(class_id):
 def edit_class(id):
     current_class = get_class(id)
 
+    if g.student["id"] != current_class["student_id"]:
+        flash("You are not authorized to edit this class.")
+        return redirect(url_for("dashboard.dashboard"))
+
     if request.method == "POST":
-        class_name = request.form["class_name"]
-        class_code = request.form["class_code"]
+        class_name = request.form.get("class_name")
+        class_code = request.form.get("class_code")
         error = "Class name is required" if not class_name else None
 
         if error:
@@ -102,7 +107,8 @@ def edit_class(id):
                     db.commit()
                 except Exception as e:
                     db.rollback()
-                    flash(f"❌ Error updating class: {e}")
+                    current_app.logger.error(f"Error updating class: {e}")
+                    flash("Error updating class. Please try again.")
 
             return redirect(url_for("dashboard.dashboard"))
 
@@ -114,18 +120,18 @@ def delete_class(id):
     current_class = get_class(id)
 
     if g.student["id"] != current_class["student_id"]:
-        flash("❌ You are not authorized to delete this class.")
+        flash("You are not authorized to delete this class.")
         return redirect(url_for("dashboard.dashboard"))
 
     db = get_db()
     with db.cursor() as cursor:
         try:
-            cursor.execute(
-                "DELETE FROM class WHERE id = %s", (id,)
-            )
+            cursor.execute("DELETE FROM class WHERE id = %s", (id,))
             db.commit()
+            flash("Class deleted successfully.")
         except Exception as e:
             db.rollback()
-            flash(f"❌ Error deleting class: {e}")
+            current_app.logger.error(f"Error deleting class: {e}")
+            flash("Error deleting class. Please try again.")
 
     return redirect(url_for("dashboard.dashboard"))

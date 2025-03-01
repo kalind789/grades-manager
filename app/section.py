@@ -17,10 +17,10 @@ def get_sections(class_id):
             """,
             (class_id,),
         )
-        columns = [desc[0] for desc in cursor.description]  # ✅ Auto-fetch column names
-        sections = [dict(zip(columns, row)) for row in cursor.fetchall()]  # ✅ Convert tuples into dicts
+        columns = [desc[0] for desc in cursor.description]
+        sections = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-    return sections
+    return jsonify({"sections": sections})  # ✅ Return a JSON response
 
 
 @bp.route('/create_section/<int:class_id>', methods=["GET", "POST"])
