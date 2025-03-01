@@ -1,7 +1,6 @@
 import pytest
-from flask import session
-from app.auth import login_required
-from flask import Response
+from flask import session, Response
+from app.auth import login_required, load_logged_in_student
 
 def test_register(client, app):
     response = client.post("/auth/register", data={
@@ -12,7 +11,7 @@ def test_register(client, app):
         "last_name": "User",
         "email": "newuser@example.com"
     })
-    # Registration should redirect (302)
+    # Registration should redirect
     assert response.status_code == 302
     with app.app_context():
         from app.db import get_db
@@ -55,10 +54,10 @@ def test_login_required(client):
     with client.session_transaction() as sess:
         sess.clear()
     with client.application.test_request_context():
+        load_logged_in_student()  # Ensure g.student is set (or remains None)
         result = protected_view()
         # The decorator should redirect to the login page.
         assert isinstance(result, Response)
-        # result.location should point to the login endpoint.
         assert "/auth/login" in result.location
 
 def test_login_failure(client):
@@ -67,6 +66,6 @@ def test_login_failure(client):
         "studentname": "nonexistent",
         "password": "wrong"
     })
-    # On failure, assume login renders the page with an error (200)
+    # On failure, login should render the page with an error.
     assert response.status_code == 200
     assert b"Wrong studentname OR please register" in response.data
