@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 
 const SignupForm = () => {
@@ -12,6 +13,7 @@ const SignupForm = () => {
     });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,8 +23,12 @@ const SignupForm = () => {
         e.preventDefault();
         try {
             await axiosInstance.post('/auth/register', formData);
-            setSuccess('Registration successful!');
+            setSuccess('Registration successful! Redirecting to login...');
             setError('');
+            // Redirect to login after a short delay
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
         } catch (err) {
             setError(err.response?.data?.error || 'Registration failed');
         }
