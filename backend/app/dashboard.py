@@ -1,18 +1,29 @@
-from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, current_app, jsonify
-)
-from werkzeug.exceptions import abort
-from app.auth import login_required
+from flask import Blueprint, jsonify, current_app
 from app.db import get_db
 from flask_jwt_extended import get_jwt_identity, jwt_required
+from psycopg2 import Error
 
 bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
-@bp.route("/", methods=("GET", "POST"))
+
+@bp.route("/", methods=["GET"])
 @jwt_required()
 def dashboard():
     db = get_db()
-    with db.cursor() as cursor:
+    cursor = db.cursor()
+    studentname = get_jwt_identity()
+
+    try:
+        cursor.execute(
+            "SELECT id FROM student WHERE studentname = %s",
+            (studentname,)
+        )
+        student = cursor.fetchone()
+        if not student:
+            return jsonify({"error": "Student not found"}), 404
+
+        student_id = student[0]
+
         cursor.execute(
             """
             SELECT c.id, c.class_name, c.class_code, c.student_id 
@@ -20,119 +31,141 @@ def dashboard():
             WHERE c.student_id = %s
             ORDER BY c.id DESC
             """,
-            (g.student["id"],),
+            (student_id,),
         )
         columns = [desc[0] for desc in cursor.description]
         classes = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-    return jsonify({"classes": classes})
+        return jsonify({"classes": classes}), 200
 
-@bp.route("/create_class", methods=("GET", "POST"))
+    except Error as e:
+        current_app.logger.error(f"Error fetching dashboard: {e}")
+        return jsonify({"error": "Failed to load dashboard"}), 500
+
+
+@bp.route("/create_class", methods=["POST"])
 @jwt_required()
 def create_class():
-    if request.method == "POST":
-        class_name = request.form.get("class_name")
-        class_code = request.form.get("class_code")
-        error = "Class name is required" if not class_name else None
-
-        if error:
-            flash(error)
-        else:
-            db = get_db()
-            with db.cursor() as cursor:
-                try:
-                    cursor.execute(
-                        """
-                        INSERT INTO class (class_name, class_code, student_id)
-                        VALUES (%s, %s, %s)
-                        """,
-                        (class_name, class_code, g.student["id"]),
-                    )
-                    db.commit()
-                except Exception as e:
-                    db.rollback()
-                    current_app.logger.error(f"Error creating class: {e}")
-                    flash("Error creating class. Please try again.")
-
-            return redirect(url_for("dashboard.dashboard"))
-
-    return render_template("dashboard/create_class.html")
-
-def get_class(class_id):
     db = get_db()
-    with db.cursor() as cursor:
+    cursor = db.cursor()
+    studentname = get_jwt_identity()
+    data = current_app.request.get_json()
+    class_name = data.get("class_name")
+    class_code = data.get("class_code")
+
+    if not class_name:
+        return jsonify({"error": "Class name is required"}), 400
+
+    try:
+        cursor.execute(
+            "SELECT id FROM student WHERE studentname = %s",
+            (studentname,)
+        )
+        student = cursor.fetchone()
+        if not student:
+            return jsonify({"error": "Student not found"}), 404
+
+        student_id = student[0]
+
         cursor.execute(
             """
-            SELECT c.id, c.class_name, c.class_code, c.student_id, s.studentname
-            FROM class c
-            JOIN student s ON s.id = c.student_id
-            WHERE c.id = %s
+            INSERT INTO class (class_name, class_code, student_id)
+            VALUES (%s, %s, %s)
             """,
-            (class_id,),
+            (class_name, class_code, student_id),
         )
-        row = cursor.fetchone()
+        db.commit()
+        return jsonify({"message": "Class created successfully"}), 201
 
-    if row is None:
-        abort(404, f"Class id {class_id} doesn't exist.")
+    except Error as e:
+        db.rollback()
+        current_app.logger.error(f"Error creating class: {e}")
+        return jsonify({"error": "Failed to create class"}), 500
 
-    column_names = ["id", "class_name", "class_code", "student_id", "studentname"]
-    return dict(zip(column_names, row))
 
-@bp.route("/<int:id>/edit_class", methods=("GET", "POST"))
+@bp.route("/<int:id>/edit_class", methods=["PUT"])
 @jwt_required()
 def edit_class(id):
-    current_class = get_class(id)
+    db = get_db()
+    cursor = db.cursor()
+    studentname = get_jwt_identity()
+    data = current_app.request.get_json()
+    class_name = data.get("class_name")
+    class_code = data.get("class_code")
 
-    if g.student["id"] != current_class["student_id"]:
-        flash("You are not authorized to edit this class.")
-        return redirect(url_for("dashboard.dashboard"))
+    if not class_name:
+        return jsonify({"error": "Class name is required"}), 400
 
-    if request.method == "POST":
-        class_name = request.form.get("class_name")
-        class_code = request.form.get("class_code")
-        error = "Class name is required" if not class_name else None
+    try:
+        cursor.execute(
+            "SELECT id FROM student WHERE studentname = %s",
+            (studentname,)
+        )
+        student = cursor.fetchone()
+        if not student:
+            return jsonify({"error": "Student not found"}), 404
 
-        if error:
-            flash(error)
-        else:
-            db = get_db()
-            with db.cursor() as cursor:
-                try:
-                    cursor.execute(
-                        """
-                        UPDATE class SET class_name = %s, class_code = %s
-                        WHERE id = %s
-                        """,
-                        (class_name, class_code, id),
-                    )
-                    db.commit()
-                except Exception as e:
-                    db.rollback()
-                    current_app.logger.error(f"Error updating class: {e}")
-                    flash("Error updating class. Please try again.")
+        student_id = student[0]
 
-            return redirect(url_for("dashboard.dashboard"))
+        cursor.execute(
+            "SELECT student_id FROM class WHERE id = %s",
+            (id,)
+        )
+        class_owner = cursor.fetchone()
+        if not class_owner or class_owner[0] != student_id:
+            return jsonify({"error": "Unauthorized"}), 403
 
-    return render_template("dashboard/edit_class.html", current_class=current_class)
+        cursor.execute(
+            """
+            UPDATE class
+            SET class_name = %s, class_code = %s
+            WHERE id = %s
+            """,
+            (class_name, class_code, id),
+        )
+        db.commit()
+        return jsonify({"message": "Class updated successfully"}), 200
 
-@bp.route("/<int:id>/delete_class", methods=("POST",))
+    except Error as e:
+        db.rollback()
+        current_app.logger.error(f"Error updating class: {e}")
+        return jsonify({"error": "Failed to update class"}), 500
+
+
+@bp.route("/<int:id>/delete_class", methods=["DELETE"])
 @jwt_required()
 def delete_class(id):
-    current_class = get_class(id)
-
-    if g.student["id"] != current_class["student_id"]:
-        flash("You are not authorized to delete this class.")
-        return redirect(url_for("dashboard.dashboard"))
-
     db = get_db()
-    with db.cursor() as cursor:
-        try:
-            cursor.execute("DELETE FROM class WHERE id = %s", (id,))
-            db.commit()
-            flash("Class deleted successfully.")
-        except Exception as e:
-            db.rollback()
-            current_app.logger.error(f"Error deleting class: {e}")
-            flash("Error deleting class. Please try again.")
+    cursor = db.cursor()
+    studentname = get_jwt_identity()
 
-    return redirect(url_for("dashboard.dashboard"))
+    try:
+        cursor.execute(
+            "SELECT id FROM student WHERE studentname = %s",
+            (studentname,)
+        )
+        student = cursor.fetchone()
+        if not student:
+            return jsonify({"error": "Student not found"}), 404
+
+        student_id = student[0]
+
+        cursor.execute(
+            "SELECT student_id FROM class WHERE id = %s",
+            (id,)
+        )
+        class_owner = cursor.fetchone()
+        if not class_owner or class_owner[0] != student_id:
+            return jsonify({"error": "Unauthorized"}), 403
+
+        cursor.execute(
+            "DELETE FROM class WHERE id = %s",
+            (id,)
+        )
+        db.commit()
+        return jsonify({"message": "Class deleted successfully"}), 200
+
+    except Error as e:
+        db.rollback()
+        current_app.logger.error(f"Error deleting class: {e}")
+        return jsonify({"error": "Failed to delete class"}), 500

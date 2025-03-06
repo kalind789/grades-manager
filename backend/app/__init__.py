@@ -3,10 +3,13 @@ from flask import Flask
 from datetime import timedelta
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS
+
 
 load_dotenv()
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
+    CORS(app)
 
     app.config.from_mapping(
         SECRET_KEY = 'dev',
@@ -53,5 +56,8 @@ def create_app(test_config=None):
 
     from . import section
     app.register_blueprint(section.bp)
+
+    from . import assignment
+    app.register_blueprint(assignment.bp)
 
     return app

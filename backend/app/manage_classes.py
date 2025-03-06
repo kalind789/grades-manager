@@ -1,26 +1,40 @@
-from flask import (Blueprint, flash, g, redirect, render_template, request, session, url_for)
-from app.auth import login_required
+from flask import Blueprint, jsonify
 from app.db import get_db
-from app.section import get_sections, create_sections
+from flask_jwt_extended import jwt_required
 
 bp = Blueprint('manage_classes', __name__, url_prefix='/manage_classes')
 
-@bp.route('/manage_class/<int:class_id>', methods=("GET", "POST"))
-@login_required
+@bp.route('/manage_class/<int:class_id>', methods=["GET"])
+@jwt_required()
 def manage_class(class_id):
     db = get_db()
-    response = get_sections(class_id)  # ✅ Correct way to fetch sections
-    sections = response.json.get("sections", [])
-
     with db.cursor() as cursor:
         cursor.execute(
             """
-            SELECT id, class_name FROM class
+            SELECT id, class_name
+            FROM class
             WHERE id = %s
             """,
             (class_id,)
         )
+        result = cursor.fetchone()
+        if not result:
+            return jsonify({"error": "Class not found"}), 404
         columns = [desc[0] for desc in cursor.description]
-        class_ = dict(zip(columns, cursor.fetchone()))
+        class_ = dict(zip(columns, result))
 
-    return render_template('manage_class/manage_class.html', sections=sections, class_=class_)
+        cursor.execute(
+            """
+            SELECT id, section_name, section_weight, section_grade
+            FROM section
+            WHERE class_id = %s
+            """,
+            (class_id,)
+        )
+        section_columns = [desc[0] for desc in cursor.description]
+        sections = [dict(zip(section_columns, row)) for row in cursor.fetchall()]
+
+    return jsonify({
+        "class": class_,
+        "sections": sections
+    }), 200
