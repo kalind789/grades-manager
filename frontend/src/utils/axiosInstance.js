@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-    baseURL: 'http://127.0.0.1:5000', // Change this to your backend URL
+    baseURL: 'https://grades-manager.onrender.com', // Change this to your backend URL
+    // baseURL: 'http://127.0.0.1:5000', // Change this to your backend URL
 });
 
 axiosInstance.interceptors.request.use(
