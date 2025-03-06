@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, current_app
+from flask import Blueprint, jsonify, current_app, request
 from app.db import get_db
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from psycopg2 import Error
@@ -49,7 +49,7 @@ def create_class():
     db = get_db()
     cursor = db.cursor()
     studentname = get_jwt_identity()
-    data = current_app.request.get_json()
+    data = request.get_json()
     class_name = data.get("class_name")
     class_code = data.get("class_code")
 

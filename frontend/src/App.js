@@ -3,6 +3,7 @@ import LandingPage from './components/LandingPage';
 import LoginForm from './components/LoginForm';
 import SignupForm from './components/SignupForm';
 import Dashboard from './components/Dashboard';
+import ManageClass from './components/ManageClass';
 
 function App() {
     return (
@@ -11,6 +12,7 @@ function App() {
             <Route path="/login" element={<LoginForm />} />
             <Route path="/signup" element={<SignupForm />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/manage-class/:classId" element={<ManageClass />} />
         </Routes>
     );
 }

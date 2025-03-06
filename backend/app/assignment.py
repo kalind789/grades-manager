@@ -37,13 +37,15 @@ def update_class_grade(class_id):
             """
             SELECT SUM(section_grade * section_weight), SUM(section_weight)
             FROM section
-            WHERE class_id = %s
+            WHERE class_id = %s AND section_grade IS NOT NULL
             """,
             (class_id,)
         )
         result = cursor.fetchone()
         total_weighted, total_weight = result
-        class_grade = (total_weighted / total_weight) if total_weight else 0
+
+        class_grade = (total_weighted / total_weight) if total_weight else None
+
         cursor.execute(
             """
             UPDATE class

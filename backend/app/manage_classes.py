@@ -9,20 +9,26 @@ bp = Blueprint('manage_classes', __name__, url_prefix='/manage_classes')
 def manage_class(class_id):
     db = get_db()
     with db.cursor() as cursor:
+        # Fetch class info
         cursor.execute(
             """
-            SELECT id, class_name
+            SELECT id, class_name, class_grade
             FROM class
             WHERE id = %s
             """,
             (class_id,)
         )
-        result = cursor.fetchone()
-        if not result:
+        class_row = cursor.fetchone()
+        if not class_row:
             return jsonify({"error": "Class not found"}), 404
-        columns = [desc[0] for desc in cursor.description]
-        class_ = dict(zip(columns, result))
 
+        class_info = {
+            "id": class_row[0],
+            "class_name": class_row[1],
+            "class_grade": class_row[2],
+        }
+
+        # Fetch sections with assignments
         cursor.execute(
             """
             SELECT id, section_name, section_weight, section_grade
@@ -31,10 +37,37 @@ def manage_class(class_id):
             """,
             (class_id,)
         )
-        section_columns = [desc[0] for desc in cursor.description]
-        sections = [dict(zip(section_columns, row)) for row in cursor.fetchall()]
+        sections = []
+        for section_row in cursor.fetchall():
+            section_id, section_name, section_weight, section_grade = section_row
+
+            cursor.execute(
+                """
+                SELECT id, assignment_name, points_received, points_possible
+                FROM assignment
+                WHERE section_id = %s
+                """,
+                (section_id,)
+            )
+            assignments = [
+                {
+                    "id": a[0],
+                    "assignment_name": a[1],
+                    "points_received": a[2],
+                    "points_possible": a[3],
+                }
+                for a in cursor.fetchall()
+            ]
+
+            sections.append({
+                "id": section_id,
+                "section_name": section_name,
+                "section_weight": section_weight,
+                "section_grade": section_grade,
+                "assignments": assignments,
+            })
 
     return jsonify({
-        "class": class_,
-        "sections": sections
+        "class": class_info,
+        "sections": sections,
     }), 200
