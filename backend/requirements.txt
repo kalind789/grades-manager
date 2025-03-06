@@ -6,3 +6,4 @@ pytest
 pytest-flask 
 psycopg2-binary
 flask-cors
+flask_jwt_extended

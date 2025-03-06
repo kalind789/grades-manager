@@ -6,9 +6,6 @@ import psycopg2
 import os
 from psycopg2 import sql
 
-print("DATABASE_URL:", os.getenv('DATABASE_URL'))
-
-
 def get_db():
     """
         Return the database
