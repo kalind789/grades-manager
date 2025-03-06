@@ -2,14 +2,20 @@ import os
 from flask import Flask
 from datetime import timedelta
 from dotenv import load_dotenv
+from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 
+
+load_dotenv()
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
+    CORS(app)
 
     app.config.from_mapping(
         SECRET_KEY = 'dev',
         DATABASE = os.getenv('DATABASE_URL'),
-        PERMANENT_SESSION_LIFETIME = timedelta(minutes=10)
+        PERMANENT_SESSION_LIFETIME = timedelta(minutes=10),
+        JWT_SECRET_KEY = "super-secret"
     )
 
     if test_config == None:
@@ -22,7 +28,7 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    load_dotenv()
+    jwt = JWTManager(app)
 
     @app.route('/hello')
     def hello():
@@ -50,5 +56,8 @@ def create_app(test_config=None):
 
     from . import section
     app.register_blueprint(section.bp)
+
+    from . import assignment
+    app.register_blueprint(assignment.bp)
 
     return app
