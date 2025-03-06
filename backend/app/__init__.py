@@ -9,7 +9,11 @@ from flask_cors import CORS
 load_dotenv()
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
-    CORS(app)
+
+    CORS(app, origins=[
+        "https://grades-manager.vercel.app",  # Production frontend
+        "http://localhost:3000"               # Local development frontend
+    ], supports_credentials=True)
 
     app.config.from_mapping(
         SECRET_KEY = 'dev',
