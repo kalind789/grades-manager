@@ -25,90 +25,89 @@ const SignupForm = () => {
         setError('');
         try {
             await axiosInstance.post('/auth/register', formData);
-            setSuccess('Registration successful! Redirecting to login...');
+            setSuccess('Account created! Redirecting to login...');
             setTimeout(() => navigate('/login'), 2000);
         } catch (err) {
             setError(err.response?.data?.error || 'Registration failed');
         }
     };
 
-    return (
-        <>
-            <Navbar />
-            <div className="min-h-screen bg-primary text-secondary flex items-center justify-center px-4">
-                <form
-                    onSubmit={handleSubmit}
-                    className="w-full max-w-md p-8 bg-secondary text-primary shadow-lg rounded-lg space-y-4"
-                >
-                    <h2 className="text-2xl font-bold text-center">Create Account</h2>
+    const inputClass = "w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors";
+    const labelClass = "block text-sm font-medium text-slate-300 mb-1.5";
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <input
-                            name="first_name"
-                            placeholder="First Name"
-                            onChange={handleChange}
-                            required
-                            className="p-3 border rounded focus:outline-none focus:ring-2 focus:ring-gray-400"
-                        />
-                        <input
-                            name="last_name"
-                            placeholder="Last Name"
-                            onChange={handleChange}
-                            required
-                            className="p-3 border rounded focus:outline-none focus:ring-2 focus:ring-gray-400"
-                        />
+    return (
+        <div className="min-h-screen bg-slate-950">
+            <Navbar />
+            <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-10">
+                <div className="w-full max-w-md">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-white">Create account</h1>
+                        <p className="text-slate-400 mt-2">Start tracking your grades today</p>
                     </div>
 
-                    <input
-                        name="email"
-                        type="email"
-                        placeholder="Email"
-                        onChange={handleChange}
-                        className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-gray-400"
-                    />
-                    <input
-                        name="studentname"
-                        placeholder="Username"
-                        onChange={handleChange}
-                        required
-                        className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-gray-400"
-                    />
-                    <input
-                        name="password1"
-                        type="password"
-                        placeholder="Password"
-                        onChange={handleChange}
-                        required
-                        className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-gray-400"
-                    />
-                    <input
-                        name="password2"
-                        type="password"
-                        placeholder="Confirm Password"
-                        onChange={handleChange}
-                        required
-                        className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-gray-400"
-                    />
-
-                    {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                    {success && <p className="text-green-600 text-sm text-center">{success}</p>}
-
-                    <button
-                        type="submit"
-                        className="w-full p-3 bg-primary text-secondary rounded hover:bg-gray-800 transition-colors font-semibold"
+                    <form
+                        onSubmit={handleSubmit}
+                        className="bg-slate-900 border border-slate-700/60 rounded-2xl p-8 shadow-2xl space-y-5"
                     >
-                        Sign Up
-                    </button>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className={labelClass}>First Name</label>
+                                <input name="first_name" placeholder="Jane" onChange={handleChange} required className={inputClass} />
+                            </div>
+                            <div>
+                                <label className={labelClass}>Last Name</label>
+                                <input name="last_name" placeholder="Doe" onChange={handleChange} required className={inputClass} />
+                            </div>
+                        </div>
 
-                    <p className="text-center text-sm">
-                        Already have an account?{' '}
-                        <Link to="/login" className="text-blue-600 hover:underline">
-                            Log In
-                        </Link>
-                    </p>
-                </form>
+                        <div>
+                            <label className={labelClass}>Email</label>
+                            <input name="email" type="email" placeholder="jane@example.com" onChange={handleChange} className={inputClass} />
+                        </div>
+
+                        <div>
+                            <label className={labelClass}>Username</label>
+                            <input name="studentname" placeholder="your_username" onChange={handleChange} required className={inputClass} />
+                        </div>
+
+                        <div>
+                            <label className={labelClass}>Password</label>
+                            <input name="password1" type="password" placeholder="••••••••" onChange={handleChange} required className={inputClass} />
+                        </div>
+
+                        <div>
+                            <label className={labelClass}>Confirm Password</label>
+                            <input name="password2" type="password" placeholder="••••••••" onChange={handleChange} required className={inputClass} />
+                        </div>
+
+                        {error && (
+                            <div className="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+                                {error}
+                            </div>
+                        )}
+                        {success && (
+                            <div className="px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-sm">
+                                {success}
+                            </div>
+                        )}
+
+                        <button
+                            type="submit"
+                            className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/10"
+                        >
+                            Create Account
+                        </button>
+
+                        <p className="text-center text-sm text-slate-400">
+                            Already have an account?{' '}
+                            <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">
+                                Sign In
+                            </Link>
+                        </p>
+                    </form>
+                </div>
             </div>
-        </>
+        </div>
     );
 };
 

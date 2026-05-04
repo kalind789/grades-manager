@@ -5,18 +5,22 @@ import Navbar from './Navbar';
 import AddClassModal from './modals/AddClassModal';
 import EditClassModal from './modals/EditClassModal';
 
-const gradeColor = (grade) => {
-    if (grade == null) return 'text-gray-400';
-    if (grade >= 90) return 'text-green-500';
-    if (grade >= 80) return 'text-blue-400';
-    if (grade >= 70) return 'text-yellow-400';
-    if (grade >= 60) return 'text-orange-400';
-    return 'text-red-500';
+const gradeStyle = (grade) => {
+    if (grade == null) return { text: 'text-slate-500', badge: 'text-slate-400 bg-slate-700/50 border-slate-600' };
+    if (grade >= 90) return { text: 'text-emerald-400', badge: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' };
+    if (grade >= 80) return { text: 'text-blue-400', badge: 'text-blue-400 bg-blue-400/10 border-blue-400/20' };
+    if (grade >= 70) return { text: 'text-yellow-400', badge: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' };
+    if (grade >= 60) return { text: 'text-orange-400', badge: 'text-orange-400 bg-orange-400/10 border-orange-400/20' };
+    return { text: 'text-red-400', badge: 'text-red-400 bg-red-400/10 border-red-400/20' };
 };
 
-const gradeLabel = (grade) => {
-    if (grade == null) return 'No grades yet';
-    return `${grade.toFixed(1)}%`;
+const GradeBadge = ({ grade }) => {
+    const style = gradeStyle(grade);
+    return (
+        <span className={`text-sm font-bold px-2.5 py-1 rounded-lg border ${style.badge}`}>
+            {grade != null ? `${grade.toFixed(1)}%` : 'No grades'}
+        </span>
+    );
 };
 
 const Dashboard = () => {
@@ -25,6 +29,7 @@ const Dashboard = () => {
     const [error, setError] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingClass, setEditingClass] = useState(null);
+    const studentname = localStorage.getItem('studentname');
 
     const fetchClasses = async () => {
         try {
@@ -55,8 +60,11 @@ const Dashboard = () => {
         return (
             <>
                 <Navbar />
-                <div className="min-h-screen bg-primary text-secondary flex items-center justify-center">
-                    <p className="text-accent text-lg">Loading your classes...</p>
+                <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                        <p className="text-slate-400 text-sm">Loading your classes...</p>
+                    </div>
                 </div>
             </>
         );
@@ -65,78 +73,100 @@ const Dashboard = () => {
     return (
         <>
             <Navbar />
-            <div className="min-h-screen bg-primary text-secondary px-4 py-10">
-                <div className="max-w-2xl mx-auto">
-                    <div className="flex justify-between items-center mb-8">
-                        <h1 className="text-3xl font-bold">Your Classes</h1>
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 className="text-3xl font-bold text-white">
+                            {studentname ? `Hey, ${studentname}` : 'Your Classes'}
+                        </h1>
+                        <p className="text-slate-400 mt-1 text-sm">
+                            {classes.length} {classes.length === 1 ? 'class' : 'classes'} tracked
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setShowAddModal(true)}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20 text-sm"
+                    >
+                        <span className="text-lg leading-none">+</span>
+                        Add Class
+                    </button>
+                </div>
+
+                {error && (
+                    <div className="mb-6 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+                        {error}
+                    </div>
+                )}
+
+                {classes.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-24 text-center">
+                        <div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center mb-4 text-3xl">
+                            📚
+                        </div>
+                        <h2 className="text-xl font-semibold text-white mb-2">No classes yet</h2>
+                        <p className="text-slate-400 text-sm mb-6 max-w-xs">
+                            Add your first class to start tracking grades and assignments.
+                        </p>
                         <button
                             onClick={() => setShowAddModal(true)}
-                            className="px-4 py-2 bg-secondary text-primary font-semibold rounded hover:bg-gray-200 transition-colors"
+                            className="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-500 transition-colors text-sm"
                         >
-                            + Add Class
+                            Add Your First Class
                         </button>
                     </div>
-
-                    {error && (
-                        <p className="text-red-500 text-center mb-6">{error}</p>
-                    )}
-
-                    {classes.length === 0 ? (
-                        <div className="text-center py-20 text-accent">
-                            <p className="text-xl mb-2">No classes yet.</p>
-                            <p className="text-sm">Click "Add Class" to get started.</p>
-                        </div>
-                    ) : (
-                        <ul className="space-y-4">
-                            {classes.map((c) => (
-                                <li
-                                    key={c.id}
-                                    className="p-5 bg-secondary text-primary rounded-lg shadow flex items-center justify-between gap-4"
-                                >
-                                    <div className="min-w-0">
-                                        <h2 className="text-xl font-semibold truncate">{c.class_name}</h2>
+                ) : (
+                    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {classes.map((c) => (
+                            <li
+                                key={c.id}
+                                className="group bg-slate-900 border border-slate-700/60 rounded-2xl p-6 hover:border-slate-600 transition-all hover:shadow-lg hover:shadow-black/20 flex flex-col"
+                            >
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className="min-w-0 flex-1 pr-3">
+                                        <h2 className="text-lg font-bold text-white truncate leading-snug">
+                                            {c.class_name}
+                                        </h2>
                                         {c.class_code && (
-                                            <p className="text-sm text-accent">{c.class_code}</p>
+                                            <p className="text-xs text-slate-500 mt-0.5 font-medium tracking-wide uppercase">
+                                                {c.class_code}
+                                            </p>
                                         )}
-                                        <p className={`text-lg font-bold mt-1 ${gradeColor(c.class_grade)}`}>
-                                            {gradeLabel(c.class_grade)}
-                                        </p>
                                     </div>
+                                    <GradeBadge grade={c.class_grade} />
+                                </div>
 
-                                    <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
-                                        <Link
-                                            to={`/manage-class/${c.id}`}
-                                            className="px-3 py-1.5 text-sm bg-primary text-secondary rounded hover:bg-gray-800 transition-colors text-center"
-                                        >
-                                            Manage
-                                        </Link>
-                                        <button
-                                            onClick={() => setEditingClass(c)}
-                                            className="px-3 py-1.5 text-sm bg-accent text-secondary rounded hover:bg-gray-600 transition-colors"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(c.id)}
-                                            className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
+                                <div className="flex-1" />
+
+                                <div className="flex gap-2 mt-5 pt-4 border-t border-slate-800">
+                                    <Link
+                                        to={`/manage-class/${c.id}`}
+                                        className="flex-1 text-center py-2 text-sm bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors"
+                                    >
+                                        Manage
+                                    </Link>
+                                    <button
+                                        onClick={() => setEditingClass(c)}
+                                        className="px-4 py-2 text-sm bg-slate-800 text-slate-300 rounded-lg border border-slate-700 hover:bg-slate-700 transition-colors"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(c.id)}
+                                        className="px-4 py-2 text-sm text-red-400 rounded-lg border border-red-400/20 hover:bg-red-500/10 transition-colors"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </div>
 
             {showAddModal && (
-                <AddClassModal
-                    onClose={() => setShowAddModal(false)}
-                    onClassAdded={fetchClasses}
-                />
+                <AddClassModal onClose={() => setShowAddModal(false)} onClassAdded={fetchClasses} />
             )}
-
             {editingClass && (
                 <EditClassModal
                     classData={editingClass}

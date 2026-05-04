@@ -5,13 +5,22 @@ import Navbar from './Navbar';
 import AddSectionModal from './modals/AddSectionModal';
 import AddAssignmentModal from './modals/AddAssignmentModal';
 
-const gradeColor = (grade) => {
-    if (grade == null) return 'text-gray-400';
-    if (grade >= 90) return 'text-green-500';
-    if (grade >= 80) return 'text-blue-400';
-    if (grade >= 70) return 'text-yellow-400';
-    if (grade >= 60) return 'text-orange-400';
-    return 'text-red-500';
+const gradeStyle = (grade) => {
+    if (grade == null) return { text: 'text-slate-500', badge: 'text-slate-400 bg-slate-700/50 border-slate-600' };
+    if (grade >= 90) return { text: 'text-emerald-400', badge: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' };
+    if (grade >= 80) return { text: 'text-blue-400', badge: 'text-blue-400 bg-blue-400/10 border-blue-400/20' };
+    if (grade >= 70) return { text: 'text-yellow-400', badge: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' };
+    if (grade >= 60) return { text: 'text-orange-400', badge: 'text-orange-400 bg-orange-400/10 border-orange-400/20' };
+    return { text: 'text-red-400', badge: 'text-red-400 bg-red-400/10 border-red-400/20' };
+};
+
+const GradeBadge = ({ grade, large = false }) => {
+    const style = gradeStyle(grade);
+    return (
+        <span className={`font-bold rounded-xl border ${style.badge} ${large ? 'text-2xl px-4 py-1.5' : 'text-sm px-2.5 py-1'}`}>
+            {grade != null ? `${grade.toFixed(1)}%` : 'N/A'}
+        </span>
+    );
 };
 
 const ManageClass = () => {
@@ -39,9 +48,9 @@ const ManageClass = () => {
         fetchClassData();
     }, [fetchClassData]);
 
-    const handleSectionEdit = async (sectionId, updatedData) => {
+    const handleSectionEdit = async (sectionId, data) => {
         try {
-            await axiosInstance.put(`/section/${sectionId}/edit`, updatedData);
+            await axiosInstance.put(`/section/${sectionId}/edit`, data);
             fetchClassData();
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to update section');
@@ -58,9 +67,9 @@ const ManageClass = () => {
         }
     };
 
-    const handleAssignmentEdit = async (assignmentId, updatedData) => {
+    const handleAssignmentEdit = async (assignmentId, data) => {
         try {
-            await axiosInstance.put(`/assignment/${assignmentId}/edit`, updatedData);
+            await axiosInstance.put(`/assignment/${assignmentId}/edit`, data);
             fetchClassData();
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to update assignment');
@@ -81,8 +90,11 @@ const ManageClass = () => {
         return (
             <>
                 <Navbar />
-                <div className="min-h-screen bg-primary text-secondary flex items-center justify-center">
-                    <p className="text-accent text-lg">Loading...</p>
+                <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                        <p className="text-slate-400 text-sm">Loading...</p>
+                    </div>
                 </div>
             </>
         );
@@ -91,67 +103,84 @@ const ManageClass = () => {
     return (
         <>
             <Navbar />
-            <div className="min-h-screen bg-primary text-secondary px-4 py-10">
-                <div className="max-w-5xl mx-auto">
-                    <div className="flex flex-wrap justify-between items-start gap-4 mb-2">
-                        <div>
-                            <h1 className="text-3xl font-bold">{classInfo.class_name}</h1>
-                            {classInfo.class_code && (
-                                <p className="text-accent text-sm mt-1">{classInfo.class_code}</p>
-                            )}
-                        </div>
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+                {/* Class header */}
+                <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
+                    <div>
                         <Link
                             to="/dashboard"
-                            className="px-4 py-2 text-sm bg-accent text-secondary rounded hover:bg-gray-600 transition-colors"
+                            className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors mb-3"
                         >
-                            Back to Dashboard
+                            ← Back to Dashboard
                         </Link>
+                        <h1 className="text-3xl font-bold text-white">{classInfo.class_name}</h1>
+                        {classInfo.class_code && (
+                            <p className="text-slate-500 text-sm font-medium tracking-wide uppercase mt-1">
+                                {classInfo.class_code}
+                            </p>
+                        )}
                     </div>
-
-                    <p className={`text-2xl font-bold mb-8 ${gradeColor(classInfo.class_grade)}`}>
-                        Overall: {classInfo.class_grade != null ? `${classInfo.class_grade.toFixed(1)}%` : 'N/A'}
-                    </p>
-
-                    {error && (
-                        <div className="mb-4 p-3 bg-red-900 text-red-200 rounded text-sm">
-                            {error}
-                            <button
-                                className="ml-4 underline"
-                                onClick={() => setError('')}
-                            >
-                                Dismiss
-                            </button>
-                        </div>
-                    )}
-
-                    <button
-                        className="mb-6 px-4 py-2 bg-secondary text-primary font-semibold rounded hover:bg-gray-200 transition-colors"
-                        onClick={() => setShowAddSectionModal(true)}
-                    >
-                        + Add Section
-                    </button>
-
-                    {sections.length === 0 ? (
-                        <div className="text-center py-20 text-accent">
-                            <p className="text-xl mb-2">No sections yet.</p>
-                            <p className="text-sm">Add a section (e.g. "Homework", "Midterm") to start tracking grades.</p>
-                        </div>
-                    ) : (
-                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                            {sections.map((section) => (
-                                <EditableSection
-                                    key={section.id}
-                                    section={section}
-                                    onEdit={handleSectionEdit}
-                                    onDelete={handleSectionDelete}
-                                    onAddAssignment={() => setShowAddAssignmentModal(section.id)}
-                                    onEditAssignment={handleAssignmentEdit}
-                                    onDeleteAssignment={handleAssignmentDelete}
-                                />
-                            ))}
-                        </div>
-                    )}
+                    <div className="flex flex-col items-end gap-2">
+                        <span className="text-xs text-slate-500 uppercase tracking-wider">Overall Grade</span>
+                        <GradeBadge grade={classInfo.class_grade} large />
+                    </div>
                 </div>
+
+                {error && (
+                    <div className="mb-6 flex items-center justify-between px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+                        <span>{error}</span>
+                        <button onClick={() => setError('')} className="ml-4 text-red-300 hover:text-white">✕</button>
+                    </div>
+                )}
+
+                {/* Section controls */}
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-lg font-semibold text-white">
+                        Sections
+                        <span className="ml-2 text-sm font-normal text-slate-500">
+                            ({sections.length})
+                        </span>
+                    </h2>
+                    <button
+                        onClick={() => setShowAddSectionModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-500 transition-colors text-sm"
+                    >
+                        <span className="text-lg leading-none">+</span>
+                        Add Section
+                    </button>
+                </div>
+
+                {sections.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-24 text-center bg-slate-900 border border-slate-800 rounded-2xl">
+                        <div className="w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center mb-4 text-2xl">
+                            📋
+                        </div>
+                        <h3 className="text-lg font-semibold text-white mb-2">No sections yet</h3>
+                        <p className="text-slate-400 text-sm mb-6 max-w-xs">
+                            Add sections like "Homework" (30%) or "Midterm" (20%) to set up weighted grading.
+                        </p>
+                        <button
+                            onClick={() => setShowAddSectionModal(true)}
+                            className="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-500 transition-colors text-sm"
+                        >
+                            Add First Section
+                        </button>
+                    </div>
+                ) : (
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                        {sections.map((section) => (
+                            <SectionCard
+                                key={section.id}
+                                section={section}
+                                onEdit={handleSectionEdit}
+                                onDelete={handleSectionDelete}
+                                onAddAssignment={() => setShowAddAssignmentModal(section.id)}
+                                onEditAssignment={handleAssignmentEdit}
+                                onDeleteAssignment={handleAssignmentDelete}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
 
             {showAddSectionModal && (
@@ -161,7 +190,6 @@ const ManageClass = () => {
                     onSectionAdded={fetchClassData}
                 />
             )}
-
             {showAddAssignmentModal && (
                 <AddAssignmentModal
                     sectionId={showAddAssignmentModal}
@@ -174,10 +202,11 @@ const ManageClass = () => {
 };
 
 
-const EditableSection = ({ section, onEdit, onDelete, onAddAssignment, onEditAssignment, onDeleteAssignment }) => {
+const SectionCard = ({ section, onEdit, onDelete, onAddAssignment, onEditAssignment, onDeleteAssignment }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(section.section_name);
     const [weight, setWeight] = useState(section.section_weight);
+    const style = gradeStyle(section.section_grade);
 
     const cancelEditing = () => {
         setIsEditing(false);
@@ -193,67 +222,67 @@ const EditableSection = ({ section, onEdit, onDelete, onAddAssignment, onEditAss
         setIsEditing(false);
     };
 
+    const inputClass = "bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-indigo-500 px-2 py-1 text-sm";
+
     return (
-        <div className="p-5 bg-secondary text-primary rounded-lg shadow flex flex-col">
-            <div className="flex justify-between items-start mb-3">
-                <div className="flex-1 min-w-0 mr-2">
+        <div className="bg-slate-900 border border-slate-700/60 rounded-2xl p-5 flex flex-col hover:border-slate-600 transition-colors">
+            {/* Card header */}
+            <div className="flex items-start justify-between mb-4">
+                <div className="flex-1 min-w-0 pr-2">
                     {isEditing ? (
                         <input
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full text-xl font-bold bg-transparent border-b-2 border-gray-400 focus:outline-none focus:border-gray-700"
+                            className={`${inputClass} w-full text-base font-bold`}
                         />
                     ) : (
-                        <h2 className="text-xl font-bold truncate">{name}</h2>
+                        <h3 className="text-base font-bold text-white truncate">{name}</h3>
                     )}
+
+                    <div className="flex items-center gap-1.5 mt-1">
+                        <span className="text-xs text-slate-500">Weight:</span>
+                        {isEditing ? (
+                            <input
+                                type="number"
+                                value={weight}
+                                onChange={(e) => setWeight(e.target.value)}
+                                className={`${inputClass} w-16`}
+                                min="0.1"
+                                max="100"
+                                step="0.1"
+                            />
+                        ) : (
+                            <span className="text-xs font-semibold text-slate-300">{weight}%</span>
+                        )}
+                    </div>
                 </div>
-                <button
-                    onClick={() => onDelete(section.id)}
-                    className="text-red-400 hover:text-red-600 transition-colors text-sm flex-shrink-0"
-                    title="Delete section"
-                >
-                    Remove
-                </button>
+
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`text-sm font-bold px-2.5 py-1 rounded-lg border ${style.badge}`}>
+                        {section.section_grade != null ? `${section.section_grade.toFixed(1)}%` : 'N/A'}
+                    </span>
+                    <button
+                        onClick={() => onDelete(section.id)}
+                        className="text-slate-600 hover:text-red-400 transition-colors text-lg leading-none"
+                        title="Delete section"
+                    >
+                        ×
+                    </button>
+                </div>
             </div>
 
-            <div className="text-sm mb-1">
-                <span className="text-gray-500">Weight: </span>
-                {isEditing ? (
-                    <input
-                        type="number"
-                        value={weight}
-                        onChange={(e) => setWeight(e.target.value)}
-                        className="bg-transparent border-b border-gray-400 focus:outline-none w-16 text-sm"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                    />
-                ) : (
-                    <span className="font-medium">{weight}%</span>
-                )}
-            </div>
-
-            <p className={`text-sm mb-3 font-semibold ${section.section_grade != null
-                ? (section.section_grade >= 90 ? 'text-green-600'
-                    : section.section_grade >= 80 ? 'text-blue-600'
-                    : section.section_grade >= 70 ? 'text-yellow-600'
-                    : section.section_grade >= 60 ? 'text-orange-600'
-                    : 'text-red-600')
-                : 'text-gray-400'}`}>
-                Grade: {section.section_grade != null ? `${section.section_grade.toFixed(1)}%` : 'N/A'}
-            </p>
-
+            {/* Edit actions */}
             {isEditing ? (
-                <div className="flex space-x-2 mb-4">
+                <div className="flex gap-2 mb-4">
                     <button
                         onClick={saveChanges}
-                        className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
+                        className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors text-xs font-medium"
                     >
                         Save
                     </button>
                     <button
                         onClick={cancelEditing}
-                        className="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500 transition-colors text-sm"
+                        className="px-3 py-1.5 bg-slate-700 text-slate-200 rounded-lg hover:bg-slate-600 transition-colors text-xs font-medium"
                     >
                         Cancel
                     </button>
@@ -261,32 +290,39 @@ const EditableSection = ({ section, onEdit, onDelete, onAddAssignment, onEditAss
             ) : (
                 <button
                     onClick={() => setIsEditing(true)}
-                    className="mb-4 px-3 py-1 bg-accent text-secondary rounded hover:bg-gray-600 transition-colors text-sm self-start"
+                    className="mb-4 text-xs text-indigo-400 hover:text-indigo-300 transition-colors self-start"
                 >
-                    Edit Section
+                    Edit section
                 </button>
             )}
 
-            <div className="flex-1">
-                <h3 className="font-semibold mb-2 text-sm uppercase tracking-wide text-gray-500">Assignments</h3>
+            {/* Divider */}
+            <div className="border-t border-slate-800 mb-4" />
+
+            {/* Assignments */}
+            <div className="flex-1 flex flex-col">
+                <p className="text-xs uppercase tracking-wider text-slate-500 font-medium mb-3">
+                    Assignments ({section.assignments?.length || 0})
+                </p>
+
                 {section.assignments && section.assignments.length > 0 ? (
-                    <ul className="space-y-2">
-                        {section.assignments.map((assignment) => (
-                            <EditableAssignment
-                                key={assignment.id}
-                                assignment={assignment}
+                    <ul className="space-y-1 flex-1">
+                        {section.assignments.map((a) => (
+                            <AssignmentRow
+                                key={a.id}
+                                assignment={a}
                                 onEdit={onEditAssignment}
                                 onDelete={onDeleteAssignment}
                             />
                         ))}
                     </ul>
                 ) : (
-                    <p className="text-sm text-gray-400 mb-2">No assignments yet.</p>
+                    <p className="text-sm text-slate-600 flex-1 mb-2">No assignments yet.</p>
                 )}
 
                 <button
-                    className="mt-3 px-3 py-1.5 bg-primary text-secondary rounded hover:bg-gray-800 transition-colors text-sm w-full"
                     onClick={onAddAssignment}
+                    className="mt-4 w-full py-2 text-sm text-indigo-400 border border-dashed border-indigo-400/30 rounded-xl hover:bg-indigo-400/5 hover:border-indigo-400/50 transition-colors font-medium"
                 >
                     + Add Assignment
                 </button>
@@ -296,7 +332,7 @@ const EditableSection = ({ section, onEdit, onDelete, onAddAssignment, onEditAss
 };
 
 
-const EditableAssignment = ({ assignment, onEdit, onDelete }) => {
+const AssignmentRow = ({ assignment, onEdit, onDelete }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(assignment.assignment_name);
     const [received, setReceived] = useState(assignment.points_received);
@@ -322,45 +358,48 @@ const EditableAssignment = ({ assignment, onEdit, onDelete }) => {
         setIsEditing(false);
     };
 
+    const inputClass = "bg-slate-950 border border-slate-700 rounded text-white text-xs focus:outline-none focus:border-indigo-500 px-2 py-1";
+    const pct = ((assignment.points_received / assignment.points_possible) * 100).toFixed(0);
+
     if (isEditing) {
         return (
-            <li className="p-2 border border-gray-300 rounded text-sm space-y-1">
+            <li className="p-3 bg-slate-800 rounded-xl space-y-2 border border-slate-700">
                 <input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full border-b border-gray-300 focus:outline-none bg-transparent font-medium"
+                    className={`${inputClass} w-full`}
                     placeholder="Assignment name"
                 />
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                     <input
                         type="number"
                         value={received}
                         onChange={(e) => setReceived(e.target.value)}
-                        className="w-16 border-b border-gray-300 focus:outline-none bg-transparent text-center"
+                        className={`${inputClass} w-16 text-center`}
                         min="0"
                         step="0.5"
                     />
-                    <span className="text-gray-400">/</span>
+                    <span className="text-slate-600 text-xs">/</span>
                     <input
                         type="number"
                         value={possible}
                         onChange={(e) => setPossible(e.target.value)}
-                        className="w-16 border-b border-gray-300 focus:outline-none bg-transparent text-center"
+                        className={`${inputClass} w-16 text-center`}
                         min="0.1"
                         step="0.5"
                     />
-                    <span className="text-gray-400 ml-1">pts</span>
+                    <span className="text-slate-500 text-xs">pts</span>
                 </div>
-                <div className="flex gap-2 pt-1">
+                <div className="flex gap-2">
                     <button
                         onClick={saveChanges}
-                        className="px-2 py-0.5 bg-green-600 text-white rounded hover:bg-green-700 text-xs"
+                        className="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs hover:bg-emerald-500 transition-colors"
                     >
                         Save
                     </button>
                     <button
                         onClick={cancelEditing}
-                        className="px-2 py-0.5 bg-gray-400 text-white rounded hover:bg-gray-500 text-xs"
+                        className="px-3 py-1 bg-slate-700 text-slate-200 rounded-lg text-xs hover:bg-slate-600 transition-colors"
                     >
                         Cancel
                     </button>
@@ -369,30 +408,25 @@ const EditableAssignment = ({ assignment, onEdit, onDelete }) => {
         );
     }
 
-    const pct = ((assignment.points_received / assignment.points_possible) * 100).toFixed(1);
-
     return (
-        <li className="p-2 border border-gray-200 rounded text-sm flex justify-between items-start gap-2">
-            <div className="min-w-0">
-                <p className="font-medium truncate">{assignment.assignment_name}</p>
-                <p className="text-gray-500">
-                    {assignment.points_received} / {assignment.points_possible} pts
-                    <span className="ml-1 text-gray-400">({pct}%)</span>
+        <li className="flex items-center justify-between py-2 px-1 rounded-lg hover:bg-slate-800/50 transition-colors group">
+            <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-white truncate">{assignment.assignment_name}</p>
+                <p className="text-xs text-slate-500">
+                    {assignment.points_received}/{assignment.points_possible} pts
+                    <span className="ml-1 text-slate-600">({pct}%)</span>
                 </p>
             </div>
-            <div className="flex gap-1 flex-shrink-0">
+            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0">
                 <button
                     onClick={() => setIsEditing(true)}
-                    className="text-xs text-blue-500 hover:text-blue-700 transition-colors"
-                    title="Edit"
+                    className="text-xs text-slate-400 hover:text-indigo-400 transition-colors"
                 >
                     Edit
                 </button>
-                <span className="text-gray-300">|</span>
                 <button
                     onClick={() => onDelete(assignment.id)}
-                    className="text-xs text-red-400 hover:text-red-600 transition-colors"
-                    title="Delete"
+                    className="text-xs text-slate-400 hover:text-red-400 transition-colors"
                 >
                     Del
                 </button>

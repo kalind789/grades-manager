@@ -27,50 +27,70 @@ const LoginForm = () => {
     };
 
     return (
-        <>
+        <div className="min-h-screen bg-slate-950">
             <Navbar />
-            <div className="min-h-screen bg-primary text-secondary flex items-center justify-center px-4">
-                <form
-                    onSubmit={handleSubmit}
-                    className="w-full max-w-md p-8 bg-secondary text-primary shadow-lg rounded-lg space-y-4"
-                >
-                    <h2 className="text-2xl font-bold text-center">Log In</h2>
+            <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4">
+                <div className="w-full max-w-md">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-white">Welcome back</h1>
+                        <p className="text-slate-400 mt-2">Sign in to your account</p>
+                    </div>
 
-                    <input
-                        value={studentname}
-                        onChange={(e) => setStudentname(e.target.value)}
-                        placeholder="Username"
-                        required
-                        className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-gray-400"
-                    />
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Password"
-                        required
-                        className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-gray-400"
-                    />
-
-                    {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full p-3 bg-primary text-secondary rounded hover:bg-gray-800 transition-colors font-semibold disabled:opacity-50"
+                    <form
+                        onSubmit={handleSubmit}
+                        className="bg-slate-900 border border-slate-700/60 rounded-2xl p-8 shadow-2xl space-y-5"
                     >
-                        {loading ? 'Logging in...' : 'Log In'}
-                    </button>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                                Username
+                            </label>
+                            <input
+                                value={studentname}
+                                onChange={(e) => setStudentname(e.target.value)}
+                                placeholder="your_username"
+                                required
+                                className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                            />
+                        </div>
 
-                    <p className="text-center text-sm">
-                        Don't have an account?{' '}
-                        <Link to="/signup" className="text-blue-600 hover:underline">
-                            Sign Up
-                        </Link>
-                    </p>
-                </form>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                                Password
+                            </label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                required
+                                className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                            />
+                        </div>
+
+                        {error && (
+                            <div className="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+                                {error}
+                            </div>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/10"
+                        >
+                            {loading ? 'Signing in...' : 'Sign In'}
+                        </button>
+
+                        <p className="text-center text-sm text-slate-400">
+                            Don't have an account?{' '}
+                            <Link to="/signup" className="text-indigo-400 hover:text-indigo-300 font-medium">
+                                Sign Up
+                            </Link>
+                        </p>
+                    </form>
+                </div>
             </div>
-        </>
+        </div>
     );
 };
 
