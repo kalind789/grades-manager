@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs ls *)",
+      "Bash(python3 -c 'import ast, sys *)",
+      "Bash(node --input-type=module --eval ' *)"
+    ]
+  }
+}

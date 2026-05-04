@@ -21,15 +21,15 @@ def register():
     email = data.get('email')
 
     if not studentname:
-        return jsonify({"error": 'Must enter studentname!'}), 400
+        return jsonify({"error": 'Must enter a username'}), 400
     if not password1 or not password2:
-        return jsonify({"error": 'Must enter both passwords!'}), 400
+        return jsonify({"error": 'Must enter both passwords'}), 400
     if not first_name:
         return jsonify({"error": 'Must enter first name'}), 400
     if not last_name:
         return jsonify({"error": 'Must enter last name'}), 400
     if password1 != password2:
-        return jsonify({"error": 'Both passwords must be the same'}), 400
+        return jsonify({"error": 'Passwords do not match'}), 400
 
     try:
         cursor.execute(
@@ -42,7 +42,9 @@ def register():
         db.commit()
     except psycopg2.IntegrityError:
         db.rollback()
-        return jsonify({"error": f"Student {studentname} is already registered"}), 400
+        return jsonify({"error": f"Username '{studentname}' is already taken"}), 400
+    finally:
+        cursor.close()
 
     return jsonify({"message": "Registration successful"}), 201
 
@@ -60,17 +62,23 @@ def login():
         (studentname,)
     )
     student = cursor.fetchone()
+    cursor.close()
 
     if student is None:
-        return jsonify({"error": 'Wrong username OR please register'}), 401
+        return jsonify({"error": 'No account found with that username'}), 401
     if not check_password_hash(student[2], password):
         return jsonify({"error": 'Incorrect password'}), 401
 
-    access_token = create_access_token(identity=studentname)
+    # Store student_id (integer) as JWT identity for efficient auth in all endpoints
+    access_token = create_access_token(identity=student[0])
 
-    return jsonify({"message": "Login successful!", "access_token": access_token}), 200
+    return jsonify({
+        "message": "Login successful!",
+        "access_token": access_token,
+        "studentname": student[1],
+    }), 200
 
 
 @bp.route('/logout', methods=["POST"])
 def logout():
-    return jsonify({"message": "Logout successful on client side (token deleted)."}), 200
+    return jsonify({"message": "Logged out successfully"}), 200
